@@ -1,0 +1,62 @@
+datasource db {
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Chat {
+  id               String    @id @default(uuid())
+  userId           String
+  title            String
+  isFavourite      Boolean   @default(false)
+  isCode           Boolean   @default(false)
+  createdAt        DateTime  @default(now())
+  messageUpdatedAt DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  Message          Message[]
+  Plugin           Plugin[]
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  role      String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  chatId    String
+  chat      Chat     @relation(fields: [chatId], references: [id])
+
+  @@index([chatId])
+}
+
+model Plugin {
+  id        String   @id @default(uuid())
+  type      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  chatId    String
+  chat      Chat     @relation(fields: [chatId], references: [id])
+
+  @@index([chatId])
+}
+
+model UserApiLimit {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  count     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model UserSubscription {
+  id                     String    @id @default(uuid())
+  userId                 String    @unique
+  stripeCustomerId       String?   @unique @map("stripe_customer_id")
+  stripeSubscriptionId   String?   @unique @map("stripe_subscription_id")
+  stripePriceId          String?   @unique @map("stripe_price_id")
+  stripeCurrentPeriodEnd DateTime? @unique @map("stripe_current_period_end")
+}
